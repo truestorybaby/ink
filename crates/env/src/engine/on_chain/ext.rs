@@ -177,9 +177,23 @@ where
     }
 }
 
+/// Used as a sentinel value when reading and writing contract memory.
+///
+/// We use this value to signal `None` to a contract when only a primitive is allowed
+/// and we don't want to go through encoding a full Rust type. Using `u32::Max` is a safe
+/// sentinel because contracts are never allowed to use such a large amount of resources.
+/// So this value doesn't make sense for a memory location or length.
+const SENTINEL: u32 = u32::MAX;
+
 /// The raw return code returned by the host side.
 #[repr(transparent)]
 pub struct ReturnCode(u32);
+
+impl From<ReturnCode> for Option<u32> {
+    fn from(code: ReturnCode) -> Self {
+        (code.0 < SENTINEL).then(|| code.0)
+    }
+}
 
 impl ReturnCode {
     /// Returns the raw underlying `u32` representation.
@@ -217,16 +231,14 @@ mod sys {
             data_len: u32,
         );
 
-        pub fn seal_set_storage(
-            key_ptr: Ptr32<[u8]>,
-            value_ptr: Ptr32<[u8]>,
-            value_len: u32,
-        );
         pub fn seal_get_storage(
             key_ptr: Ptr32<[u8]>,
             output_ptr: Ptr32Mut<[u8]>,
             output_len_ptr: Ptr32Mut<u32>,
         ) -> ReturnCode;
+
+        pub fn seal_contains_storage(key_ptr: Ptr32<[u8]>) -> ReturnCode;
+
         pub fn seal_clear_storage(key_ptr: Ptr32<[u8]>);
 
         pub fn seal_call_chain_extension(
@@ -288,6 +300,19 @@ mod sys {
 
         pub fn seal_caller_is_origin() -> ReturnCode;
 
+        pub fn seal_set_code_hash(code_hash_ptr: Ptr32<[u8]>) -> ReturnCode;
+
+        pub fn seal_code_hash(
+            account_id_ptr: Ptr32<[u8]>,
+            output_ptr: Ptr32Mut<[u8]>,
+            output_len_ptr: Ptr32Mut<u32>,
+        ) -> ReturnCode;
+
+        pub fn seal_own_code_hash(
+            output_ptr: Ptr32Mut<[u8]>,
+            output_len_ptr: Ptr32Mut<u32>,
+        );
+
         #[cfg(feature = "ink-debug")]
         pub fn seal_debug_message(str_ptr: Ptr32<[u8]>, str_len: u32) -> ReturnCode;
 
@@ -336,6 +361,12 @@ mod sys {
             output_ptr: Ptr32Mut<[u8]>,
             output_len_ptr: Ptr32Mut<u32>,
         ) -> ReturnCode;
+
+        pub fn seal_set_storage(
+            key_ptr: Ptr32<[u8]>,
+            value_ptr: Ptr32<[u8]>,
+            value_len: u32,
+        ) -> ReturnCode;
     }
 
     #[link(wasm_import_module = "__unstable__")]
@@ -345,6 +376,11 @@ mod sys {
             signature_ptr: Ptr32<[u8]>,
             // 32 bytes hash of the message
             message_hash_ptr: Ptr32<[u8]>,
+            output_ptr: Ptr32Mut<[u8]>,
+        ) -> ReturnCode;
+
+        pub fn seal_ecdsa_to_eth_address(
+            public_key_ptr: Ptr32<[u8]>,
             output_ptr: Ptr32Mut<[u8]>,
         ) -> ReturnCode;
     }
@@ -462,14 +498,15 @@ pub fn deposit_event(topics: &[u8], data: &[u8]) {
     }
 }
 
-pub fn set_storage(key: &[u8], encoded_value: &[u8]) {
-    unsafe {
+pub fn set_storage(key: &[u8], encoded_value: &[u8]) -> Option<u32> {
+    let ret_code = unsafe {
         sys::seal_set_storage(
             Ptr32::from_slice(key),
             Ptr32::from_slice(encoded_value),
             encoded_value.len() as u32,
         )
-    }
+    };
+    ret_code.into()
 }
 
 pub fn clear_storage(key: &[u8]) {
@@ -488,6 +525,11 @@ pub fn get_storage(key: &[u8], output: &mut &mut [u8]) -> Result {
         }
     };
     extract_from_slice(output, output_len as usize);
+    ret_code.into()
+}
+
+pub fn storage_contains(key: &[u8]) -> Option<u32> {
+    let ret_code = unsafe { sys::seal_contains_storage(Ptr32::from_slice(key)) };
     ret_code.into()
 }
 
@@ -667,6 +709,16 @@ pub fn ecdsa_recover(
     ret_code.into()
 }
 
+pub fn ecdsa_to_eth_address(pubkey: &[u8; 33], output: &mut [u8; 20]) -> Result {
+    let ret_code = unsafe {
+        sys::seal_ecdsa_to_eth_address(
+            Ptr32::from_slice(pubkey),
+            Ptr32Mut::from_slice(output),
+        )
+    };
+    ret_code.into()
+}
+
 pub fn is_contract(account_id: &[u8]) -> bool {
     let ret_val = unsafe { sys::seal_is_contract(Ptr32::from_slice(account_id)) };
     ret_val.into_bool()
@@ -675,4 +727,31 @@ pub fn is_contract(account_id: &[u8]) -> bool {
 pub fn caller_is_origin() -> bool {
     let ret_val = unsafe { sys::seal_caller_is_origin() };
     ret_val.into_bool()
+}
+
+pub fn set_code_hash(code_hash: &[u8]) -> Result {
+    let ret_val = unsafe { sys::seal_set_code_hash(Ptr32::from_slice(code_hash)) };
+    ret_val.into()
+}
+
+pub fn code_hash(account_id: &[u8], output: &mut [u8]) -> Result {
+    let mut output_len = output.len() as u32;
+    let ret_val = unsafe {
+        sys::seal_code_hash(
+            Ptr32::from_slice(account_id),
+            Ptr32Mut::from_slice(output),
+            Ptr32Mut::from_ref(&mut output_len),
+        )
+    };
+    ret_val.into()
+}
+
+pub fn own_code_hash(output: &mut [u8]) {
+    let mut output_len = output.len() as u32;
+    unsafe {
+        sys::seal_own_code_hash(
+            Ptr32Mut::from_slice(output),
+            Ptr32Mut::from_ref(&mut output_len),
+        )
+    }
 }

@@ -162,8 +162,9 @@ impl CallFlags {
 
 /// Environmental contract functionality that does not require `Environment`.
 pub trait EnvBackend {
-    /// Writes the value to the contract storage under the given key.
-    fn set_contract_storage<V>(&mut self, key: &Key, value: &V)
+    /// Writes the value to the contract storage under the given key and returns
+    /// the size of the pre-existing value at the specified key if any.
+    fn set_contract_storage<V>(&mut self, key: &Key, value: &V) -> Option<u32>
     where
         V: scale::Encode;
 
@@ -175,6 +176,9 @@ pub trait EnvBackend {
     fn get_contract_storage<R>(&mut self, key: &Key) -> Result<Option<R>>
     where
         R: scale::Decode;
+
+    /// Returns the size of a value stored under the specified key is returned if any.
+    fn contract_storage_contains(&mut self, key: &Key) -> Option<u32>;
 
     /// Clears the contract's storage key entry.
     fn clear_contract_storage(&mut self, key: &Key);
@@ -249,6 +253,14 @@ pub trait EnvBackend {
         output: &mut [u8; 33],
     ) -> Result<()>;
 
+    /// Retrieves an Ethereum address from the ECDSA compressed `pubkey`
+    /// and stores the result in `output`.
+    fn ecdsa_to_eth_address(
+        &mut self,
+        pubkey: &[u8; 33],
+        output: &mut [u8; 20],
+    ) -> Result<()>;
+
     /// Low-level interface to call a chain extension method.
     ///
     /// Returns the output of the chain extension of the specified type.
@@ -282,6 +294,15 @@ pub trait EnvBackend {
         E: From<ErrorCode>,
         F: FnOnce(u32) -> ::core::result::Result<(), ErrorCode>,
         D: FnOnce(&[u8]) -> ::core::result::Result<T, E>;
+
+    /// Sets a new code hash for the current contract.
+    ///
+    /// This effectively replaces the code which is executed for this contract address.
+    ///
+    /// # Errors
+    ///
+    /// - If the supplied `code_hash` cannot be found on-chain.
+    fn set_code_hash(&mut self, code_hash: &[u8]) -> Result<()>;
 }
 
 /// Environmental contract functionality.
@@ -445,6 +466,24 @@ pub trait TypedEnvBackend: EnvBackend {
     ///
     /// For more details visit: [`caller_is_origin`][`crate::caller_is_origin`]
     fn caller_is_origin<E>(&mut self) -> bool
+    where
+        E: Environment;
+
+    /// Retrieves the code hash of the contract at the given `account` id.
+    ///
+    /// # Note
+    ///
+    /// For more details visit: [`code_hash`][`crate::code_hash`]
+    fn code_hash<E>(&mut self, account: &E::AccountId) -> Result<E::Hash>
+    where
+        E: Environment;
+
+    /// Retrieves the code hash of the currently executing contract.
+    ///
+    /// # Note
+    ///
+    /// For more details visit: [`own_code_hash`][`crate::own_code_hash`]
+    fn own_code_hash<E>(&mut self) -> Result<E::Hash>
     where
         E: Environment;
 }
