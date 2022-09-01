@@ -22,7 +22,9 @@ jobs:
       matrix:
         platform:
           - macos-latest
-          - windows-latest
+# Windows installation of `cargo-contract` currently fails due to https://github.com/paritytech/cargo-contract/issues/649
+# Once this is resolved we should re-enable building the examples on windows
+#          - windows-latest
         toolchain:
           - nightly
         job:
@@ -35,18 +37,18 @@ jobs:
       RUST_BACKTRACE:           full
     steps:
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
       - run: npm install wasm-opt -g
 
       - name: Checkout sources & submodules
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
         with:
           fetch-depth: 1
           submodules: recursive
 
       - name: Install toolchain
         id: toolchain
-        uses: actions-rs/toolchain@master
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.toolchain }}
@@ -54,19 +56,19 @@ jobs:
           override: true
 
       - name: Install cargo-dylint
-        uses: baptiste0928/cargo-install@v1
+        uses: baptiste0928/cargo-install@bf6758885262d0e6f61089a9d8c8790d3ac3368f # v1.3.0
         with:
           crate: cargo-dylint
           version: 1
 
       - name: Install dylint-link
-        uses: baptiste0928/cargo-install@v1
+        uses: baptiste0928/cargo-install@bf6758885262d0e6f61089a9d8c8790d3ac3368f # v1.3.0
         with:
           crate: dylint-link
           version: 1
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v1.3.0
+        uses: Swatinem/rust-cache@v2.0.0
 
       - name: Install `cargo-contract` `master`
         uses: actions-rs/cargo@v1
