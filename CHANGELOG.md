@@ -5,6 +5,324 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Basic support for `dyn Trait` to allow cross-contract calls only with trait - [#1673](https://github.com/paritytech/ink/pull/1673)
+- E2E: auto detect contracts to be built - [#1691](https://github.com/paritytech/ink/pull/1691)
+- Add `set_code_hash` to `EnvAccess` - [#1698](https://github.com/paritytech/ink/pull/1698)
+
+### Changed
+- Support conditional compilation - [#1707](https://github.com/paritytech/ink/pull/1707)
+
+## Version 4.0.1
+
+### Fixed
+- Fixing `ManualKey<0>` to act properly - [#1670](https://github.com/paritytech/ink/pull/1670)
+- Indicated latest release of `cargo-contract` in `e2e` crate
+
+### Added
+- Add `call-runtime` support - [#1641](https://github.com/paritytech/ink/pull/1641)
+
+## Version 4.0.0
+
+The latest stable release of ink! is here 🥳
+
+This version brings a lot of usability improvements, making the language better suited
+for the needs of production parachains.
+
+A couple of highlights include:
+- Changes to how contract storage works, which significantly reduced the sizes of
+  contract binaries
+- A new end-to-end testing framework, letting you easily write integration tests
+- Changes to the metadata format, which (in part) makes error handling more expressive
+
+There's a lot more to dig through, so take some time to poke around the `CHANGELOG`
+(including the `4.0.0-alpha` and `4.0.0-beta` releases).
+
+You may notice there have been a few breaking changes. No need to be scared though, we
+wrote up a [migration guide](https://use.ink/faq/migrating-from-ink-3-to-4) covering all
+of the breaking changes and how to update your ink! 3.x contract accordingly.
+
+Thanks to everyone that helped make this release possible ❤️
+
+### Compatibility
+
+In order to build contracts which use ink! `v4.0.0` you need to use
+`cargo-contract`
+[`v2.0.0`](https://github.com/paritytech/cargo-contract/releases/tag/v2.0.0).
+You can install it as follows:
+
+`cargo install cargo-contract --force --locked`
+
+You will also need to use a version of [`pallet-contracts`](https://github.com/paritytech/substrate/tree/master/frame/contracts)
+later than [polkadot-v0.9.37](https://github.com/paritytech/substrate/tree/polkadot-v0.9.37)
+in your node.
+
+The [`v0.24.0`](https://github.com/paritytech/substrate-contracts-node/releases/tag/v0.24.0)
+release of the [`substrate-contracts-node`](https://github.com/paritytech/substrate-contracts-node) is
+compatible with the ink! `4.0.0` release.
+
+For full compatibility requirements see the [migration guide](https://use.ink/faq/migrating-from-ink-3-to-4/#compatibility).
+
+- Add `Mapping::contains(key)` and `Mapping::insert_return_size(key, val)` ‒ [#1224](https://github.com/paritytech/ink/pull/1224)
+- Add [`payment-channel`](https://github.com/paritytech/ink/tree/master/examples/payment-channel) example ‒ [#1248](https://github.com/paritytech/ink/pull/1248) (thanks [@kanishkatn](https://github.com/kanishkatn)!)
+- Add `version` field to ink! metadata ‒ [#1313](https://github.com/paritytech/ink/pull/1313)
+- The `rand-extension` example has been adapted to an updated version of the `ChainExtension` API ‒ [#1356](https://github.com/paritytech/ink/pull/1356)
+- Add `ink_env::pay_with_call!` helper macro for off-chain emulation of sending payments with contract message calls ‒ [#1379](https://github.com/paritytech/ink/pull/1379)
+- Allow using `Result<Self, Error>` as a return type in constructors ‒ [#1446](https://github.com/paritytech/ink/pull/1446)
+- Add `Mapping::take()` function allowing to get a value removing it from storage ‒ [#1461](https://github.com/paritytech/ink/pull/1461)
+- Add E2E testing framework MVP ‒ [#1395](https://github.com/paritytech/ink/pull/1395)
+- Add E2E tests for `Mapping` functions - [#1492](https://github.com/paritytech/ink/pull/1492)
+- E2E: expose call dry-run method ‒ [#1624](https://github.com/paritytech/ink/pull/1624)
+- Make cross-contract callee non-optional ‒ [#1636](https://github.com/paritytech/ink/pull/1636)
+- Support custom environment in E2E tests - [#1645](https://github.com/paritytech/ink/pull/1645) (thanks [@pmikolajczyk41](https://github.com/pmikolajczyk41)!)
+
+### Changed
+- Contract size optimization in case contract doesn't accept payment ‒ [#1267](https://github.com/paritytech/ink/pull/1267) (thanks [@xgreenx](https://github.com/xgreenx)!)
+- Move ink! linter into `ink` repository ‒ [#1361](https://github.com/paritytech/ink/pull/1267)
+- Introduce `ink` entrance crate ‒ [#1223](https://github.com/paritytech/ink/pull/1223)
+- Use `XXH32` instead of `sha256` for calculating storage keys ‒ [#1393](https://github.com/paritytech/ink/pull/1393)
+- Storage Refactoring ‒ [#1331](https://github.com/paritytech/ink/pull/1331)
+- Add support for language level errors (`LangError`) ‒ [#1450](https://github.com/paritytech/ink/pull/1450)
+- Return `LangError`s from constructors ‒ [#1504](https://github.com/paritytech/ink/pull/1504)
+- Update `scale-info` requirement to `2.3` ‒ [#1467](https://github.com/paritytech/ink/pull/1467)
+- Merge `Mapping::insert(key, val)` and `Mapping::insert_return_size(key, val)` into one method - [#1463](https://github.com/paritytech/ink/pull/1463)
+- FFI: no more `__unstable__` wasm import module ‒ [#1522](https://github.com/paritytech/ink/pull/1522)
+- Clean up CallBuilder `return()` type ‒ [#1525](https://github.com/paritytech/ink/pull/1525)
+- Fix trait message return type metadata ‒ [#1531](https://github.com/paritytech/ink/pull/1531)
+- Bump Dylint dependencies ‒ [#1551](https://github.com/paritytech/ink/pull/1551)
+- Stabilize `take_storage` ‒ [#1568](https://github.com/paritytech/ink/pull/1568)
+- Chain Extension: Evaluation of method return type at compile time ‒ [#1569](https://github.com/paritytech/ink/pull/1569)
+- Make more functions be const ‒ [#1574](https://github.com/paritytech/ink/pull/1574) (thanks [@yjhmelody](https://github.com/yjhmelody)!)
+- Unify fallible and non fallible `instantiate` methods ‒ [#1591](https://github.com/paritytech/ink/pull/1591)
+- Make `CallBuilder` and `CreateBuilder` error handling optional ‒ [#1602](https://github.com/paritytech/ink/pull/1602)
+- Rename `CallBuilder::fire()` method to `invoke()` ‒ [#1604](https://github.com/paritytech/ink/pull/1604)
+- chore: add minimum rust version to the ink crate ‒ [#1609](https://github.com/paritytech/ink/pull/1609) (thanks [@Kurtsley](https://github.com/Kurtsley)!)
+- Rename `_checked` codegen call methods with `try_` ‒ [#1621](https://github.com/paritytech/ink/pull/1621)
+- Bump Substrate and `subxt` dependencies ‒ [#1549](https://github.com/paritytech/ink/pull/1549)
+- E2E: spawn a separate contracts node instance per test ‒ [#1642](https://github.com/paritytech/ink/pull/1642)
+
+### Fixed
+- Trim single whitespace prefix in the metadata `docs` field ‒ [#1385](https://github.com/paritytech/ink/pull/1385)
+- Allow pay_with_call to take multiple arguments ‒ [#1401](https://github.com/paritytech/ink/pull/1401)
+- Add Determinism enum from pallet-contracts ‒ [#1547](https://github.com/paritytech/ink/pull/1547)
+- Added missed `WhereClosure` for the generics into `storage_item` ‒ [#1536](https://github.com/paritytech/ink/pull/1536) (thanks [@xgreenx](https://github.com/xgreenx)!)
+
+### Removed
+- Implement `ecdsa_to_eth_address()` and remove `eth_compatibility` crate ‒ [#1233](https://github.com/paritytech/ink/pull/1233)
+- Remove `wee-alloc` ‒ [#1403](https://github.com/paritytech/ink/pull/1403)
+- Remove `ink_env::random` function ‒ [#1442](https://github.com/paritytech/ink/pull/1442)
+- Remove `Default` implementation for AccountId ‒ [#1255](https://github.com/paritytech/ink/pull/1255)
+
+## Version 4.0.0-rc
+
+The first release candidate is here! This is the first release which could become the final
+`v4.0.0`. Any subsequent release candidates should only contain bug fixes: no API changes,
+breaking or otherwise.
+
+### Breaking Changes
+
+1. We've renamed some of the generated message methods on the `ContractRef` struct. They
+   have been changed from `_checked` to `try_` ([#1621](https://github.com/paritytech/ink/pull/1621))
+1. We have removed the `Default` implementation for `AccountId`s. This is because of
+   security concerns around the use of the zero address which has a known private key in
+   the `sr25519` and `ed25519` curves ([#1255](https://github.com/paritytech/ink/pull/1255)).
+1. We have replaced the `CallBuilder::callee()` method with a `call()` method and also
+   added a `delegate()` method. This streamlines the `Call` and `DelegateCall` workflows
+   ([#1636](https://github.com/paritytech/ink/pull/1636))
+
+### Added
+- E2E: expose call dry-run method ‒ [#1624](https://github.com/paritytech/ink/pull/1624)
+- Make cross-contract callee non-optional ‒ [#1636](https://github.com/paritytech/ink/pull/1636)
+
+### Changed
+- Rename `_checked` codegen call methods with `try_` ‒ [#1621](https://github.com/paritytech/ink/pull/1621)
+- Bump Substrate and `subxt` dependencies ‒ [#1549](https://github.com/paritytech/ink/pull/1549)
+
+### Removed
+- Remove `Default` implementation for AccountId ‒ [#1255](https://github.com/paritytech/ink/pull/1255)
+
+## Version 4.0.0-beta.1
+The coolest feature included in this release is the first published version of
+ink!'s native ["end-to-end" (E2E) testing framework](https://github.com/paritytech/ink/issues/1234).
+
+This enables testing of a contract by deploying and calling it on a Substrate node with
+`pallet-contracts`. See the [`erc20` example](./examples/erc20/lib.rs) for usage.
+
+### Breaking Changes
+This release includes a couple of breaking changes.
+
+1. The `CallBuilder::returns()` method does not require an extra `MessageResult` anymore
+   as the type is now added under the hood [(#1525)](https://github.com/paritytech/ink/pull/1525)
+1. The `CallBuilder::invoke()` and `CreateBuilder::instantiate() `methods now unwrap the
+   `Result` from `pallet-contracts` under the hood ([#1602](https://github.com/paritytech/ink/pull/1602))
+   If you wish to handle the error use the new `try_` variants of those methods instead.
+1. The `CallBuilder::fire()` method has been renamed to `invoke()`
+   ([#1604](https://github.com/paritytech/ink/pull/1604))
+1. The `returns_result` flag has been removed from the `#[ink(extension = …)]` attribute
+   ([#1569](https://github.com/paritytech/ink/pull/1569))
+   We now infer this information at compile time. If `handle_status` is set to `true`,
+   the return type will still be wrapped into `Result` as before.
+1. The Minimum Supported Rust Version (MSRV) has been set to `1.63.0`. This was already
+   the case, but previously it was enforced by `cargo-contract` instead of ink!
+   ([#1609](https://github.com/paritytech/ink/pull/1609))
+
+### Added
+- Add E2E testing framework MVP ‒ [#1395](https://github.com/paritytech/ink/pull/1395)
+- Add E2E tests for `Mapping` functions - [#1492](https://github.com/paritytech/ink/pull/1492)
+
+### Fixed
+- Add Determinism enum from pallet-contracts ‒ [#1547](https://github.com/paritytech/ink/pull/1547)
+- Added missed `WhereClosure` for the generics into `storage_item` ‒ [#1536](https://github.com/paritytech/ink/pull/1536) (thanks [@xgreenx](https://github.com/xgreenx))
+
+### Changed
+- Handle `LangError` from instantiate ‒ [#1512](https://github.com/paritytech/ink/pull/1512)
+- FFI: no more `__unstable__` wasm import module ‒ [#1522](https://github.com/paritytech/ink/pull/1522)
+- Clean up CallBuilder `return()` type ‒ [#1525](https://github.com/paritytech/ink/pull/1525)
+- Fix trait message return type metadata ‒ [#1531](https://github.com/paritytech/ink/pull/1531)
+- Bump Dylint dependencies ‒ [#1551](https://github.com/paritytech/ink/pull/1551)
+- Stabilize `take_storage` ‒ [#1568](https://github.com/paritytech/ink/pull/1568)
+- Chain Extension: Evaluation of method return type at compile time ‒ [#1569](https://github.com/paritytech/ink/pull/1569)
+- Make more functions be const ‒ [#1574](https://github.com/paritytech/ink/pull/1574) (thanks [@yjhmelody](https://github.com/yjhmelody))
+- Unify fallible and non fallible `instantiate` methods ‒ [#1591](https://github.com/paritytech/ink/pull/1591)
+- Make `CallBuilder` and `CreateBuilder` error handling optional ‒ [#1602](https://github.com/paritytech/ink/pull/1602)
+- Rename `CallBuilder::fire()` method to `invoke()` ‒ [#1604](https://github.com/paritytech/ink/pull/1604)
+- chore: add minimum rust version to the ink crate ‒ [#1609](https://github.com/paritytech/ink/pull/1609) (thanks [@Kurtsley](https://github.com/Kurtsley))
+
+## Version 4.0.0-beta
+
+The focus of the first `beta` release is to establish the stable ABI for the final `4.0.0`
+release. It means that whilst subsequent `beta` releases may contain breaking contract
+*code* changes, the ABI will remain the same so that any contract compiled and deployed
+with `4.0.0-beta` continue to be compatible with all future `4.0.0` versions.
+
+### Compatibility
+In order to build contracts which use ink! `v4.0.0-beta` you need to use
+`cargo-contract`
+[`v2.0.0-beta`](https://github.com/paritytech/cargo-contract/releases/tag/v2.0.0-beta).
+You can install it as follows:
+
+`cargo install cargo-contract --version 2.0.0-beta`
+
+You will also need to use a version of [`pallet-contracts`](https://github.com/paritytech/substrate/tree/master/frame/contracts)
+later than [265e3f1](https://github.com/paritytech/substrate/commit/265e3f12a2937fe4f71280b3652471627609d04f)
+(Nov 3, 2022) in your node.
+
+The [`v0.22.1`](https://github.com/paritytech/substrate-contracts-node/releases/tag/v0.22.1)
+release of the [`substrate-contracts-node`](https://github.com/paritytech/substrate-contracts-node) is
+compatible with the ink! `4.0.0-beta` release.
+
+### Breaking Changes
+
+## Constructors and Messages now return `LangError`s
+
+We have added a way to handle errors that are neither specific to a particular contract,
+nor from the underlying execution environment (e.g `pallet-contracts`). Instead these are
+errors that may come from the smart contracting language itself.
+
+For example, take the case where a contract message is called using an invalid selector.
+This is not something a smart contract author should need to define as failure case, nor
+is it something that the Contracts pallet needs to be aware of.
+
+Previously, the contract execution would trap if an invalid selector was used, leaving
+callers with no way to handle the error gracefully. This can now be handled with the help
+of the newly added `LangError`.
+
+In short, this change means that all ink! messages and constructors now return a
+`Result<R, LangError>`, where `R` is the original return type. Contract callers can
+choose to handle the `LangError`.
+
+In order to make this error compatible with other languages we have also added a
+`lang_error` field to the metadata format. This will be the central registry of all the
+different error variants which languages may want to emit in the future.
+
+Related pull-requests:
+- https://github.com/paritytech/ink/pull/1450
+- https://github.com/paritytech/ink/pull/1504
+
+Related discussions:
+- https://github.com/paritytech/ink/issues/1207
+- https://github.com/paritytech/substrate/issues/11018
+- https://github.com/paritytech/ink/issues/1002
+
+## Random function removed
+We had to remove [`ink_env::random`](https://docs.rs/ink_env/3.3.1/ink_env/fn.random.html)
+with [#1442](https://github.com/paritytech/ink/pull/1442).
+This function allowed contract developers getting random entropy.
+There is unfortunately no way how this can be done safely enough
+with built-in Substrate primitives on-chain currently. We're
+following the recommendation of our auditors to remove it.
+
+The alternative right now is to provide random entropy off-chain to
+the contract, to use a random entropy oracle, or to have a chain-extension
+that does this, in case the chain has a possibility to do so.
+
+We hope to bring this function back in a future release of ink!, the
+best hope right now is that it could come back with [Sassafras](https://wiki.polkadot.network/docs/learn-consensus#badass-babe-sassafras), a block production
+protocol for future versions of Polkadot.
+
+### Added
+- Allow using `Result<Self, Error>` as a return type in constructors ‒ [#1446](https://github.com/paritytech/ink/pull/1446)
+- Add `Mapping::take()` function allowing to get a value removing it from storage ‒ [#1461](https://github.com/paritytech/ink/pull/1461)
+
+### Changed
+- Add support for language level errors (`LangError`) ‒ [#1450](https://github.com/paritytech/ink/pull/1450)
+- Return `LangError`s from constructors ‒ [#1504](https://github.com/paritytech/ink/pull/1504)
+- Update `scale-info` requirement to `2.3` ‒ [#1467](https://github.com/paritytech/ink/pull/1467)
+- Merge `Mapping::insert(key, val)` and `Mapping::insert_return_size(key, val)` into one method - [#1463](https://github.com/paritytech/ink/pull/1463)
+
+### Removed
+- Remove `ink_env::random` function ‒ [#1442](https://github.com/paritytech/ink/pull/1442)
+
+## Version 4.0.0-alpha.3
+
+### Breaking Changes
+
+#### New `ink` crate
+The `ink_lang` crate has been replaced in [#1223](https://github.com/paritytech/ink/pull/1223) by a new top level `ink`
+crate. All existing sub-crates are reexported and should be used via the new `ink` crate, so e.g. `ink::env` instead of
+`ink_env`. Contract authors should now import the top level `ink` crate instead of the individual crates.
+
+##### Migration
+- In `Cargo.toml` Replace all individual `ink_*` crate dependencies with the `ink` crate.
+- In the contract source:
+  - Remove the commonly used `use ink_lang as ink` idiom.
+  - Replace all usages of individual crates with reexports, e.g. `ink_env` ➜ `ink::env`.
+
+#### Storage Rework
+[#1331](https://github.com/paritytech/ink/pull/1331) changes the way `ink!` works with contract storage. Storage keys
+are generated at compile-time, and user facing abstractions which determine how contract data is laid out in storage
+have changed.
+
+##### Migration
+- Initialize `Mapping` fields with `Mapping::default()` instead of  `ink_lang::utils::initialize_contract` in
+constructors. See [`erc20`](./examples/erc20/lib.rs) and other examples which use a `Mapping`.
+- Remove `SpreadAllocate`, `SpreadLayout` and `PackedLayout` implementations.
+
+#### Removal of `wee-alloc` support
+ink! uses a bump allocator by default, additionally we supported another allocator (`wee-alloc`)
+through a feature flag. `wee-alloc` is no longer maintained and we removed support for it.
+
+### Changed
+- Introduce `ink` entrance crate ‒ [#1223](https://github.com/paritytech/ink/pull/1223)
+- Use `XXH32` instead of `sha256` for calculating storage keys ‒ [#1393](https://github.com/paritytech/ink/pull/1393)
+- Storage Refactoring ‒ [#1331](https://github.com/paritytech/ink/pull/1331)
+
+### Fixed
+- Trim single whitespace prefix in the metadata `docs` field ‒ [#1385](https://github.com/paritytech/ink/pull/1385)
+- Allow pay_with_call to take multiple arguments ‒ [#1401](https://github.com/paritytech/ink/pull/1401)
+
+### Added
+- Add `ink_env::pay_with_call!` helper macro for off-chain emulation of sending payments with contract message calls ‒ [#1379](https://github.com/paritytech/ink/pull/1379)
+
+### Removed
+- Remove `wee-alloc` ‒ [#1403](https://github.com/paritytech/ink/pull/1403)
+
+## Version 4.0.0-alpha.2
+
+**This version was skipped due to an error during the release process**
+
+As part of this series of `alpha`s we are looking for ways to streamline our release process,
+so small errors like this are learning experiences for us.
 
 ## Version 4.0.0-alpha.1
 
@@ -47,7 +365,7 @@ return an `Option<u32>` instead of `()`.
 - Move ink! linter into `ink` repository ‒ [#1361](https://github.com/paritytech/ink/pull/1267)
 
 ### Removed
-- :x: Implement ecdsa_to_eth_address() and remove eth_compatibility crate ‒ [#1233](https://github.com/paritytech/ink/pull/1233)
+- :x: Implement `ecdsa_to_eth_address()` and remove `eth_compatibility` crate ‒ [#1233](https://github.com/paritytech/ink/pull/1233)
 
 ## Version 3.3.1
 
@@ -144,7 +462,7 @@ We added two new `Mapping` API functions:
 [`Mapping::insert_return_size`](https://paritytech.github.io/ink/ink_storage/struct.Mapping.html#method.insert_return_size) ‒ [#1224](https://github.com/paritytech/ink/pull/1224).
 These are more gas-efficient than whatever you were using previously.
 
-Additionaly there are a couple new `ink_env` functions now:
+Additionally there are a couple new `ink_env` functions now:
 * [`ink_env::set_code_hash`](https://paritytech.github.io/ink/ink_env/fn.set_code_hash.html)
 * [`ink_env::own_code_hash`](https://paritytech.github.io/ink/ink_env/fn.own_code_hash.html)
 * [`ink_env::code_hash`](https://paritytech.github.io/ink/ink_env/fn.code_hash.html)
@@ -554,9 +872,9 @@ ink! 3.0-rc4 is compatible with
 - [`substrate-contracts-node`](https://github.com/paritytech/substrate-contracts-node) version `0.1.0` or newer.
     - Install the newest version using `cargo install contracts-node --git https://github.com/paritytech/substrate-contracts-node.git --force`.
 
-The documentation on our [Documentation Portal](https://ink.substrate.io)
+The documentation on our [Documentation Portal](https://use.ink)
 is up-to-date with this release candidate. Since the last release candidate we notably
-added a number of [Frequently Asked Questions](https://ink.substrate.io/faq)
+added a number of [Frequently Asked Questions](https://use.ink/faq)
 there.
 
 ### Quality Assurance
@@ -585,7 +903,7 @@ of key improvements to our testing setup:
 - Implemented the (unstable) `seal_rent_status` API ‒ [#798](https://github.com/paritytech/ink/pull/798).
 - Implemented the (unstable) `seal_debug_message` API ‒ [#792](https://github.com/paritytech/ink/pull/792).
     - Printing debug messages can now be achieved via `ink_env::debug_println!(…)`.
-    - See [our documentation](https://ink.substrate.io/faq#how-do-i-print-something-to-the-console-from-the-runtime)
+    - See [our documentation](https://use.ink/faq#how-do-i-print-something-to-the-console-from-the-runtime)
       for more information.
     - The examples have been updated to reflect this new way of printing debug messages.
 - Added usage comments with code examples to the `ink_env` API ‒ [#797](https://github.com/paritytech/ink/pull/797).
@@ -646,7 +964,7 @@ ink! 3.0-rc3 is compatible with
 ### Added
 
 - Implemented chain extensions feature for ink!.
-- ink!'s official documentation portal: https://ink.substrate.io/
+- ink!'s official documentation portal: https://use.ink/
 - It is now possible to pass a `salt` argument to contract instantiations.
 - Implemented fuzz testing for the ink! codebase.
 

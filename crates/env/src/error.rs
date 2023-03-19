@@ -44,9 +44,11 @@ pub enum Error {
     NotCallable,
     /// An unknown error has occurred.
     Unknown,
-    /// The call to `seal_debug_message` had no effect because debug message
+    /// The call to `debug_message` had no effect because debug message
     /// recording was disabled.
     LoggingDisabled,
+    /// The call dispatched by `call_runtime` was executed but returned an error.
+    CallRuntimeFailed,
     /// ECDSA pubkey recovery failed. Most probably wrong recovery id or signature.
     EcdsaRecoveryFailed,
 }

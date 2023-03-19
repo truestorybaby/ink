@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with cargo-contract.  If not, see <http://www.gnu.org/licenses/>.
 
+#![doc(
+    html_logo_url = "https://use.ink/img/crate-docs/logo.png",
+    html_favicon_url = "https://use.ink/crate-docs/favicon.png"
+)]
 #![feature(rustc_private)]
 
 dylint_linting::dylint_library!();
@@ -26,16 +30,12 @@ extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 
-mod mapping_initialized;
-
 #[doc(hidden)]
 #[no_mangle]
 pub fn register_lints(
     _sess: &rustc_session::Session,
-    lint_store: &mut rustc_lint::LintStore,
+    _lint_store: &mut rustc_lint::LintStore,
 ) {
-    lint_store.register_lints(&[mapping_initialized::MAPPING_INITIALIZED]);
-    lint_store.register_late_pass(|| Box::new(mapping_initialized::MappingInitialized));
 }
 
 #[test]

@@ -20,12 +20,15 @@
 //! FFI to interface with FRAME contracts and a primitive blockchain
 //! emulator for simple off-chain testing.
 
+#![doc(
+    html_logo_url = "https://use.ink/img/crate-docs/logo.png",
+    html_favicon_url = "https://use.ink/crate-docs/favicon.png"
+)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(
     missing_docs,
     bad_style,
     bare_trait_objects,
-    const_err,
     improper_ctypes,
     non_shorthand_field_patterns,
     no_mangle_generic_items,
@@ -47,22 +50,32 @@
 #[allow(unused_extern_crates)]
 extern crate rlibc;
 
-#[cfg(all(not(feature = "std"), target_arch = "wasm32"))]
+#[cfg(not(feature = "std"))]
 #[allow(unused_variables)]
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     // This code gets removed in release builds where the macro will expand into nothing.
     debug_print!("{}\n", info);
 
-    // We only use this operation if we are guaranteed to be in Wasm32 compilation.
-    // This is used in order to make any panic a direct abort avoiding Rust's general
-    // panic infrastructure.
+    #[cfg(target_arch = "wasm32")]
     core::arch::wasm32::unreachable();
+
+    // For any other nostd architecture we just call an imaginary
+    // `abort` function. No other architecture is supported. We
+    // just have this to check if compilation does not break
+    // for other true nostd targets.
+    #[cfg(not(target_arch = "wasm32"))]
+    unsafe {
+        extern "C" {
+            fn abort() -> !;
+        }
+        abort();
+    }
 }
 
 // This extern crate definition is required since otherwise rustc
 // is not recognizing its allocator and panic handler definitions.
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "no-allocator")))]
 extern crate ink_allocator;
 
 mod api;
@@ -70,6 +83,7 @@ mod arithmetic;
 mod backend;
 pub mod call;
 pub mod chain_extension;
+mod contract;
 mod engine;
 mod error;
 pub mod hash;
@@ -94,21 +108,25 @@ pub use self::{
         CallFlags,
         ReturnFlags,
     },
+    contract::{
+        ContractEnv,
+        ContractReference,
+    },
     error::{
         Error,
         Result,
     },
     topics::Topics,
     types::{
-        AccountId,
-        Clear,
+        AccountIdGuard,
         DefaultEnvironment,
         Environment,
         FromLittleEndian,
-        Hash,
+        Gas,
         NoChainExtension,
     },
 };
+use ink_primitives::Clear;
 
 cfg_if::cfg_if! {
     if #[cfg(any(feature = "ink-debug", feature = "std"))] {
@@ -127,7 +145,7 @@ cfg_if::cfg_if! {
         ///
         /// # Note
         ///
-        /// This depends on the `seal_debug_message` interface which requires the
+        /// This depends on the `debug_message` interface which requires the
         /// `"pallet-contracts/unstable-interface"` feature to be enabled in the target runtime.
         #[macro_export]
         macro_rules! debug_print {
@@ -139,7 +157,7 @@ cfg_if::cfg_if! {
         ///
         /// # Note
         ///
-        /// This depends on the `seal_debug_message` interface which requires the
+        /// This depends on the `debug_message` interface which requires the
         /// `"pallet-contracts/unstable-interface"` feature to be enabled in the target runtime.
         #[macro_export]
         macro_rules! debug_println {
